@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Naif — Portfolio</title>
+  <title>Naif - Portfolio</title>
 
   <link rel="stylesheet" href="css/styles.css" />
   <script defer src="js/script.js"></script>
@@ -18,7 +18,7 @@
   <header class="site-header">
     <div class="container header-inner">
       <div class="brand">
-        <span class="logo" aria-hidden="true">🟩</span>
+        <span class="logo" aria-hidden="true">dYYc</span>
         <strong>Naif</strong>
         <span class="tagline">Web Engineering Student</span>
       </div>
@@ -26,8 +26,9 @@
       <nav class="nav" aria-label="Main">
         <a href="#about">About</a>
         <a href="#projects">Projects</a>
+        <a href="#github">GitHub</a>
         <a href="#contact">Contact</a>
-        <button id="themeToggle" class="btn" type="button" aria-pressed="false" aria-label="Toggle dark and light theme">🌙 Dark</button>
+        <button id="themeToggle" class="btn" type="button" aria-pressed="false" aria-label="Toggle dark and light theme">Switch to Dark</button>
       </nav>
     </div>
   </header>
@@ -37,21 +38,29 @@
     <section id="about" class="section container">
       <div class="about-grid">
         <div>
-          <h1>Hi, I’m Naif 👋</h1>
+          <h1>Hi, I'm Naif</h1>
           <p class="lead">
-            I’m a student at KFUPM studying Computer Science. I’m currently studying HTML, CSS, and JavaScript in SWE 363. My goal by the end of this course is to build useful web applications and improve step by step as an engineer.
+            I'm a student at KFUPM studying Computer Science. I'm currently studying HTML, CSS, and JavaScript in SWE 363. My goal by the end of this course is to build useful web applications and improve step by step as an engineer.
           </p>
           <p>
-            I like turning real university problems into working tools — scheduling rooms, organizing events, and making things easier for students and admins.
+            I like turning real university problems into working tools - scheduling rooms, organizing events, and making things easier for students and admins.
           </p>
+          <div class="greeting">
+            <p class="muted" id="greetingMessage">Welcome! Tell me your name so I can greet you next time.</p>
+            <form id="greetingForm" class="inline-form" novalidate>
+              <label class="sr-only" for="greetingInput">Your name</label>
+              <input id="greetingInput" type="text" name="greetingName" placeholder="Enter your name" autocomplete="name" />
+              <button class="btn" type="submit">Save name</button>
+            </form>
+          </div>
           <div class="cta-row">
             <a class="btn primary" href="#projects">View Projects</a>
             <a class="btn" href="#contact">Contact Me</a>
           </div>
         </div>
         <figure class="profile">
-          <img src="assets/images/profile.jpg" alt="Naif wearing traditional Saudi attire and smiling" width="480" height="480" />
-          <figcaption>Based in KSA • Open to collaborations</figcaption>
+          <img src="assets/images/profile.jpg" alt="Naif wearing traditional Saudi attire and smiling" width="480" height="480" loading="lazy" decoding="async" />
+          <figcaption>Based in KSA - Open to collaborations</figcaption>
         </figure>
       </div>
     </section>
@@ -71,7 +80,7 @@
       <div id="projectsGrid" class="grid projects-grid">
         <!-- Project 1 -->
         <article class="card project-card" data-category="desktop">
-          <img src="assets/images/project1-placeholder.jpg" alt="Screenshot of the Admin Panel and User Panel windows for the Classroom Reservation System" width="800" height="450" />
+          <img src="assets/images/project1-placeholder.jpg" alt="Screenshot of the Admin Panel and User Panel windows for the Classroom Reservation System" width="800" height="450" loading="lazy" decoding="async" />
           <div class="card-body">
             <h3>Classroom Reservation System (JavaFX)</h3>
 
@@ -80,7 +89,7 @@
 
             <p class="details hidden">
               A desktop application built using JavaFX to simplify classroom scheduling.
-              It gives admins tools like “Manage Rooms” and “Manage Reservations”, and normal users can
+              It gives admins tools like "Manage Rooms" and "Manage Reservations," and normal users can
               search for available rooms, submit booking requests, and view their booking history.
               It reduces scheduling conflicts for meetings, classes, and events by adding approval flow.
             </p>
@@ -95,7 +104,7 @@
 
         <!-- Project 2 -->
         <article class="card project-card" data-category="university">
-          <img src="assets/images/project2-placeholder.jpg" alt="KFUPM Events Hub interface showing suggested events and recently added events in cards" width="800" height="450" />
+          <img src="assets/images/project2-placeholder.jpg" alt="KFUPM Events Hub interface showing suggested events and recently added events in cards" width="800" height="450" loading="lazy" decoding="async" />
           <div class="card-body">
             <h3>KFUPM Events Hub</h3>
 
@@ -110,8 +119,8 @@
             </p>
 
             <ul class="project-highlights">
-              <li>Approve + publish events in one dashboard</li>
-              <li>Students browse “Suggested” and “Recently Added”</li>
+              <li>Approve and publish events in one dashboard</li>
+              <li>Students browse "Suggested" and "Recently Added"</li>
               <li>QR code check-in and attendance analytics</li>
             </ul>
           </div>
@@ -120,6 +129,40 @@
 
       <!-- Empty / no results message -->
       <p id="noResultsMsg" class="muted no-results hidden">No projects found.</p>
+    </section>
+
+    <!-- GitHub Activity -->
+    <section id="github" class="section container">
+      <div class="section-heading">
+        <h2>Latest GitHub Repositories</h2>
+        <p class="muted">Live data pulled from the GitHub API with filters, sorting, and helpful errors.</p>
+      </div>
+
+      <form id="githubUserForm" class="inline-form" aria-label="GitHub username">
+        <label for="githubUsername">GitHub username</label>
+        <input id="githubUsername" name="githubUsername" type="text" value="NaifAlFareed" autocomplete="off" />
+        <button class="btn" type="submit">Load repos</button>
+      </form>
+
+      <div class="repo-controls" aria-label="Repo controls">
+        <label for="languageFilter">Filter by language</label>
+        <select id="languageFilter">
+          <option value="all">All languages</option>
+        </select>
+
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="updated">Recently updated</option>
+          <option value="stars">Most stars</option>
+          <option value="name">Name A-Z</option>
+        </select>
+      </div>
+
+      <div id="repoStatus" class="repo-status" role="status" aria-live="polite">Enter a username to load repositories.</div>
+      <p id="repoError" class="repo-error hidden" role="alert"></p>
+      <p id="repoEmpty" class="repo-empty hidden">No repositories found for this selection.</p>
+
+      <ul id="repoList" class="repo-list" aria-live="polite"></ul>
     </section>
 
     <!-- Contact -->
@@ -159,8 +202,8 @@
 
   <footer class="site-footer">
     <div class="container footer-inner">
-      <span>© <span id="year"></span> Naif. All rights reserved.</span>
-      <a class="muted" href="#about">Back to top ↑</a>
+      <span>Ac <span id="year"></span> Naif. All rights reserved.</span>
+      <a class="muted" href="#about">Back to top</a>
     </div>
   </footer>
 </body>
