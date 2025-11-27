@@ -1,39 +1,29 @@
-# AI Usage Report — Assignment 2
+# AI Usage Report – Assignment 3
 
-## 1. Purpose of AI Use
-AI was used through **ChatGPT (GPT-5)** as a coding and design assistant to improve interactivity and documentation quality.  
+## Tools Used
+- ChatGPT (GPT-5) via Codex CLI.
 
-### Key AI Contributions
-- Helped plan Assignment 2 features (filters, collapsible details, inline form feedback).  
-- Generated improved HTML structure for accessibility.  
-- Suggested responsive CSS animations and transitions.  
-- Provided final README and technical documentation templates.  
-- Guided integration of user feedback, error messages, and `localStorage` persistence.
+## Prompts & Outputs
+- Asked for help mapping assignment requirements to concrete features (multi-API ideas, state management, validation).
+- Requested wording for documentation sections (README, technical notes) to keep them concise and student-written.
+- Sought suggestions for resilient weather + quotes API usage without API keys.
 
----
+## My Edits & Understanding
+- Rewrote all HTML/CSS/JS manually to match my structure and naming.
+- Adjusted API error handling, storage keys, and UI text to keep it consistent with my portfolio tone.
+- Added my own project cards, session timer, search/sort logic, and layout tweaks after receiving ideas.
+- Verified every API endpoint is public/no-key and safe for the assignment.
 
-## 2. Scope of AI Contribution
-| Area | AI Assistance | Student Work |
-|------|---------------|--------------|
-| HTML | Interactive sections (toggle/filter) markup | Integrated into personal portfolio layout. |
-| CSS | Fade animations, hover effects | Customized colors, layout and spacing. |
-| JS | Theme toggle (localStorage), project filtering, form validation logic | Tested and debugged all scripts manually. |
-| Docs | Drafted README and reports | Edited for accuracy and clarity. |
+## Benefits
+- Faster brainstorming for advanced features that still fit a student portfolio.
+- Clearer documentation phrasing and checklist generation for testing.
+- Time saved on mapping weather codes and deciding on quotable endpoints.
 
----
+## Challenges
+- Keeping the UI “student-made” while still polished; required trimming overly formal AI wording.
+- Ensuring all new features stayed lightweight without extra libraries.
 
-## 3. Ethical Use
-- AI used only as a learning and productivity tool.  
-- Every generated piece was **reviewed, understood, and modified** by me.  
-- Full responsibility for the final submission is mine.
-
----
-
-## 4. Reflection & Learning Outcomes
-- Learned how to implement interactive UI without React.  
-- Improved understanding of data handling and UX feedback.  
-- Understood how AI can speed up workflow while maintaining academic integrity.
-
----
-
-© 2025 Naif Al-Fareed
+## Learning Outcomes
+- Practiced combining multiple APIs with client-side state and filters.
+- Improved comfort with DOM reordering for search/sort flows without frameworks.
+- Strengthened habit of documenting AI involvement transparently.

@@ -36,6 +36,34 @@ themeBtn?.addEventListener("click", () => {
   applyTheme(isLight ? "dark" : "light");
 });
 
+updateThemeButton();
+
+// =====================================
+// SESSION TIMER
+// =====================================
+const sessionTimerEl = document.getElementById("sessionTimer");
+if (sessionTimerEl) {
+  const start = Date.now();
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins >= 60) {
+      const hours = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      return `${hours}h ${remMins}m ${secs.toString().padStart(2, "0")}s`;
+    }
+    return `${mins}m ${secs.toString().padStart(2, "0")}s`;
+  };
+
+  const updateTimer = () => {
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    sessionTimerEl.textContent = `Time on page: ${formatTime(elapsed)}`;
+  };
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+}
+
 // =====================================
 // USER GREETING (persisted)
 // =====================================
@@ -86,28 +114,66 @@ document.querySelectorAll(".project-card").forEach((card) => {
 });
 
 // =====================================
-// PROJECT FILTERING
+// PROJECT FILTERING + SEARCH + SORT
 // =====================================
 const filterButtons = document.querySelectorAll(".filter-btn");
-const projectCards = document.querySelectorAll(".project-card");
+const projectCards = Array.from(document.querySelectorAll(".project-card"));
+const projectsGrid = document.getElementById("projectsGrid");
 const noResultsMsg = document.getElementById("noResultsMsg");
+const projectSearchInput = document.getElementById("projectSearch");
+const projectSortSelect = document.getElementById("projectSort");
+const complexityRank = { advanced: 3, intermediate: 2, beginner: 1 };
 
-function applyFilter(category) {
-  let visibleCount = 0;
+function getActiveCategory() {
+  const active = document.querySelector(".filter-btn.active");
+  return active ? active.getAttribute("data-filter") || "all" : "all";
+}
+
+function cardMatches(card, category, query) {
+  const cardCat = card.getAttribute("data-category");
+  const matchesCategory = category === "all" || category === cardCat;
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) return matchesCategory;
+
+  const text = card.textContent.toLowerCase();
+  return matchesCategory && text.includes(normalizedQuery);
+}
+
+function sortCards(cards, sortBy) {
+  const copy = [...cards];
+  if (sortBy === "title") {
+    copy.sort((a, b) => a.querySelector("h3").textContent.localeCompare(b.querySelector("h3").textContent));
+  } else if (sortBy === "complexity") {
+    copy.sort((a, b) => {
+      const aLevel = complexityRank[a.dataset.level] || 0;
+      const bLevel = complexityRank[b.dataset.level] || 0;
+      return bLevel - aLevel;
+    });
+  } else {
+    copy.sort((a, b) => (Number(b.dataset.year) || 0) - (Number(a.dataset.year) || 0));
+  }
+  return copy;
+}
+
+function refreshProjects() {
+  const category = getActiveCategory();
+  const query = projectSearchInput?.value || "";
+  const sortBy = projectSortSelect?.value || "newest";
+  const matching = [];
 
   projectCards.forEach((card) => {
-    const cardCat = card.getAttribute("data-category");
-    const match = category === "all" || category === cardCat;
-
-    if (match) {
-      card.classList.remove("hidden");
-      visibleCount += 1;
-    } else {
-      card.classList.add("hidden");
-    }
+    const visible = cardMatches(card, category, query);
+    card.classList.toggle("hidden", !visible);
+    if (visible) matching.push(card);
   });
 
-  if (visibleCount === 0) {
+  if (projectsGrid && matching.length > 1) {
+    const sorted = sortCards(matching, sortBy);
+    sorted.forEach((card) => projectsGrid.appendChild(card));
+  }
+
+  if (matching.length === 0) {
     noResultsMsg?.classList.remove("hidden");
   } else {
     noResultsMsg?.classList.add("hidden");
@@ -118,13 +184,14 @@ filterButtons.forEach((btn) => {
   btn.addEventListener("click", () => {
     filterButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-
-    const chosen = btn.getAttribute("data-filter") || "all";
-    applyFilter(chosen);
+    refreshProjects();
   });
 });
 
-applyFilter("all");
+projectSearchInput?.addEventListener("input", refreshProjects);
+projectSortSelect?.addEventListener("change", refreshProjects);
+
+refreshProjects();
 
 // =====================================
 // CONTACT FORM VALIDATION / FEEDBACK
@@ -474,7 +541,6 @@ githubUserForm?.addEventListener("submit", (e) => {
 languageFilterSelect?.addEventListener("change", renderRepos);
 sortSelect?.addEventListener("change", renderRepos);
 
-// Kick off initial load with remembered username or default value in the input
 const initialUsername =
   localStorage.getItem("githubUser") ||
   (githubUsernameInput ? githubUsernameInput.value.trim() : "") ||
@@ -484,3 +550,211 @@ if (githubUsernameInput) {
   githubUsernameInput.value = initialUsername;
 }
 fetchRepos(initialUsername);
+
+// =====================================
+// WEATHER API (Open-Meteo)
+// =====================================
+const weatherForm = document.getElementById("weatherForm");
+const weatherCityInput = document.getElementById("weatherCity");
+const weatherStatusEl = document.getElementById("weatherStatus");
+const weatherErrorEl = document.getElementById("weatherError");
+const weatherCard = document.getElementById("weatherCard");
+const weatherTempEl = document.getElementById("weatherTemp");
+const weatherUnitEl = document.getElementById("weatherUnit");
+const weatherLocationEl = document.getElementById("weatherLocation");
+const weatherDetailsEl = document.getElementById("weatherDetails");
+const DEFAULT_CITY = "Dhahran";
+
+const WEATHER_CODES = {
+  0: "Clear sky",
+  1: "Mainly clear",
+  2: "Partly cloudy",
+  3: "Overcast",
+  45: "Fog",
+  48: "Fog",
+  51: "Light drizzle",
+  53: "Drizzle",
+  55: "Heavy drizzle",
+  61: "Light rain",
+  63: "Rain",
+  65: "Heavy rain",
+  71: "Snow",
+  80: "Rain showers",
+  95: "Thunderstorm",
+};
+
+function describeWeather(code) {
+  return WEATHER_CODES[code] || "Updated conditions";
+}
+
+function setWeatherStatus(message) {
+  if (weatherStatusEl) {
+    weatherStatusEl.textContent = message;
+  }
+}
+
+function showWeatherError(message) {
+  if (!weatherErrorEl) return;
+  weatherErrorEl.textContent = message;
+  weatherErrorEl.classList.remove("hidden");
+}
+
+function clearWeatherError() {
+  if (!weatherErrorEl) return;
+  weatherErrorEl.textContent = "";
+  weatherErrorEl.classList.add("hidden");
+}
+
+function renderWeather(data, locationLabel) {
+  if (!weatherCard || !weatherTempEl || !weatherUnitEl || !weatherLocationEl || !weatherDetailsEl) return;
+  weatherTempEl.textContent = Math.round(data.temperature_2m);
+  weatherUnitEl.textContent = "°C";
+  weatherLocationEl.textContent = locationLabel;
+  weatherDetailsEl.textContent = `${describeWeather(data.weather_code)} • Humidity ${data.relative_humidity_2m}% • Wind ${Math.round(data.wind_speed_10m)} km/h`;
+  weatherCard.classList.remove("hidden");
+}
+
+async function fetchWeather(city) {
+  const trimmed = (city || "").trim();
+  if (!trimmed) {
+    showWeatherError("Please enter a city to load the forecast.");
+    return;
+  }
+
+  clearWeatherError();
+  setWeatherStatus("Looking up coordinates...");
+  weatherCard?.classList.add("hidden");
+
+  try {
+    const geoResponse = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=1&language=en&format=json`,
+    );
+
+    if (!geoResponse.ok) {
+      throw new Error("Unable to look up that city right now.");
+    }
+
+    const geoData = await geoResponse.json();
+    const first = geoData?.results?.[0];
+    if (!first) {
+      throw new Error("City not found. Try another spelling.");
+    }
+
+    const { latitude, longitude, name, country } = first;
+    setWeatherStatus("Fetching forecast...");
+
+    const weatherResponse = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto`,
+    );
+
+    if (!weatherResponse.ok) {
+      throw new Error("Weather service unavailable right now.");
+    }
+
+    const weatherData = await weatherResponse.json();
+    const current = weatherData?.current;
+    if (!current) {
+      throw new Error("No forecast returned for that location.");
+    }
+
+    renderWeather(current, `${name}, ${country}`);
+    setWeatherStatus(`Updated just now for ${name}.`);
+    localStorage.setItem("weatherCity", trimmed);
+  } catch (error) {
+    showWeatherError(error.message || "Could not load weather.");
+    setWeatherStatus("Could not load weather.");
+  }
+}
+
+weatherForm?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  fetchWeather(weatherCityInput?.value);
+});
+
+const initialCity = localStorage.getItem("weatherCity") || DEFAULT_CITY;
+if (weatherCityInput) {
+  weatherCityInput.value = initialCity;
+}
+fetchWeather(initialCity);
+
+// =====================================
+// QUOTE API (Quotable)
+// =====================================
+const quoteTextEl = document.getElementById("quoteText");
+const quoteAuthorEl = document.getElementById("quoteAuthor");
+const quoteRefreshBtn = document.getElementById("quoteRefresh");
+const quoteSaveBtn = document.getElementById("quoteSave");
+const quoteStatusEl = document.getElementById("quoteStatus");
+const favoriteQuoteEl = document.getElementById("favoriteQuote");
+
+// Local fallback quotes for offline or blocked requests
+const FALLBACK_QUOTES = [
+  { content: "Small daily progress beats occasional sprints.", author: "Naif" },
+  { content: "Ship it, learn, and improve on the next iteration.", author: "Naif" },
+  { content: "Constraints are features in disguise.", author: "Naif" },
+  { content: "Clarity over cleverness. Make it readable first.", author: "Naif" },
+];
+
+function showQuoteStatus(message) {
+  if (quoteStatusEl) {
+    quoteStatusEl.textContent = message;
+  }
+}
+
+function setQuote(content, author) {
+  if (!quoteTextEl || !quoteAuthorEl) return;
+  quoteTextEl.textContent = content || "Stay motivated and keep building.";
+  quoteAuthorEl.textContent = author ? `- ${author}` : "";
+}
+
+function renderFavoriteQuote() {
+  if (!favoriteQuoteEl) return;
+  const saved = localStorage.getItem("favoriteQuote");
+  if (saved) {
+    favoriteQuoteEl.textContent = `Favorite: ${saved}`;
+    favoriteQuoteEl.classList.remove("hidden");
+  } else {
+    favoriteQuoteEl.classList.add("hidden");
+  }
+}
+
+async function loadQuote() {
+  if (!quoteTextEl || !quoteAuthorEl) return;
+  showQuoteStatus("Loading a new quote...");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch("https://api.quotable.io/random?tags=inspirational|success", {
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error("Quote service unavailable.");
+    }
+    const data = await response.json();
+    setQuote(data.content, data.author);
+    showQuoteStatus("Fresh quote loaded.");
+  } catch (error) {
+    const fallback = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+    setQuote(fallback.content, fallback.author);
+    showQuoteStatus("Network blocked or offline. Using a local quote.");
+  }
+  clearTimeout(timeout);
+}
+
+quoteRefreshBtn?.addEventListener("click", loadQuote);
+
+quoteSaveBtn?.addEventListener("click", () => {
+  if (!quoteTextEl) return;
+  const favorite = `${quoteTextEl.textContent} ${quoteAuthorEl?.textContent || ""}`.trim();
+  if (!favorite) {
+    showQuoteStatus("Load a quote before saving.");
+    return;
+  }
+  localStorage.setItem("favoriteQuote", favorite);
+  renderFavoriteQuote();
+  showQuoteStatus("Saved as your favorite.");
+});
+
+renderFavoriteQuote();
+loadQuote();
